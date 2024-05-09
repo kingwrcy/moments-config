@@ -68,25 +68,27 @@ const state = reactive<Schema>({
   adminEmail: '',
   emailHost: '',
   emailPort: 587,
-  emailSecure: false,
+  emailSecure: true,
   emailLoginName: '',
   emailPassword: '',
   emailFrom: '',
   emailFromName: '',
   enableAliyunJudge: false,
   aliyunAk: '',
-  aliyunSk: '',
+  aliyunSk: '',  
 })
 
+const emailSending = ref(false)
+
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-  const {siteUrl,enableComment,enableShowComment,commentMaxLength,memoMaxLine,googleRecaptchaSiteKey,pageSize,dateTimeFormat,...rest} = event.data
+  const { siteUrl, enableComment, enableShowComment, commentMaxLength, memoMaxLine, googleRecaptchaSiteKey, pageSize, dateTimeFormat, ...rest } = event.data
   const config = {
-    public:{siteUrl,enableComment,enableShowComment,commentMaxLength,memoMaxLine,googleRecaptchaSiteKey,pageSize,dateTimeFormat},
-    private:{...rest}  
+    public: { siteUrl, enableComment, enableShowComment, commentMaxLength, memoMaxLine, googleRecaptchaSiteKey, pageSize, dateTimeFormat },
+    private: { ...rest }
   }
 
-   // 创建一个临时的textarea元素
-   var textarea = document.createElement("textarea");
+  // 创建一个临时的textarea元素
+  var textarea = document.createElement("textarea");
   // 设置textarea的内容为指定的文本
   textarea.value = JSON.stringify(config);
   // 将textarea添加到文档中
@@ -100,7 +102,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   toast.success('复制成功,请返回粘贴并保存')
 }
 
-async function onError (event: FormErrorEvent) {
+async function onError(event: FormErrorEvent) {
   toast.error('请先修复错误')
   const element = document.getElementById(event.errors[0].id)
   element?.focus()
@@ -116,18 +118,43 @@ const dateFormatOptions = [
   { value: 'asc', label: '2024-05-08 21:02:54' },
 ]
 
+async function testSendEmail() {
+  if (state.adminEmail && state.emailHost && state.emailPort && state.emailLoginName && state.emailFrom && state.emailFromName) {
+    emailSending.value = true
+    const { success, messageId } = await $fetch('/api/sendMail', {
+      method: 'POST',
+      body: JSON.stringify({
+        adminEmail: state.adminEmail,
+        emailHost: state.emailHost,
+        emailPort: state.emailPort,
+        emailSecure: state.emailSecure,
+        emailLoginName: state.emailLoginName,
+        emailPassword: state.emailPassword,
+        emailFrom: state.emailFrom,
+        emailFromName: state.emailFromName,
+      })
+    })
+    if (success) {
+      toast.success('发送邮件成功了,去你的管理员邮箱里查收吧!')
+    } else {
+      toast.error('发送邮件失败了,' + messageId)
+    }
+    emailSending.value=false
+  } else {
+    toast.error('请先填写完整的邮件服务器信息!')
+  }
+}
+
 
 </script>
 
 <template>
 
-  <UForm :schema="schema" :state="state" @submit="onSubmit" @error="onError"> 
+  <UForm :schema="schema" :state="state" @submit="onSubmit" @error="onError">
 
-    
+    <div class="flex flex-row flex-wrap gap-10 mt-10">
 
-    <div class="flex flex-row flex-wrap gap-10 mt-10 ">
-
-      <UCard class="w-[400px] bg-white dark:bg-[#181818] ">
+      <UCard class="w-[400px] bg-white dark:bg-[#181818]">
         <template #header>
           <div class="flex items-center gap-2">
             <UIcon name="i-carbon-data-base" />
@@ -187,7 +214,7 @@ const dateFormatOptions = [
           <UFormGroup label="是否启用" name="enableNotifyByEmail" hint="有人评论时会发送邮件通知">
             <UToggle v-model="state.enableNotifyByEmail" />
           </UFormGroup>
-          <UFormGroup label="管理员邮箱" name="adminEmail">
+          <UFormGroup label="管理员邮箱" name="adminEmail" hint="测试时会往这里发送邮件">
             <UInput v-model="state.adminEmail" autocomplete="off" />
           </UFormGroup>
           <UFormGroup label="邮箱服务器地址" name="emailHost">
@@ -211,7 +238,7 @@ const dateFormatOptions = [
           <UFormGroup label="发件人名称" name="emailFromName">
             <UInput v-model="state.emailFromName" autocomplete="off" />
           </UFormGroup>
-          <UButton type="button" color="gray" variant="solid">
+          <UButton :loading="emailSending" type="button" @click="testSendEmail" color="gray" variant="solid">
             测试发送邮件
           </UButton>
         </div>
