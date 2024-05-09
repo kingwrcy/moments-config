@@ -3,6 +3,10 @@ import { z } from 'zod'
 import type { FormErrorEvent, FormSubmitEvent } from '#ui/types'
 import { toast } from 'vue-sonner'
 
+import {  decode } from 'js-base64';
+const route = useRoute()
+const conifg=(route.query.config||'') as string
+
 const emailParser = z.string().email()
 const schema = z.object({
   siteUrl: z.string().refine((val) => val === '' || val.startsWith('http'), {
@@ -75,8 +79,17 @@ const state = reactive<Schema>({
   emailFromName: '',
   enableAliyunJudge: false,
   aliyunAk: '',
-  aliyunSk: '',  
+  aliyunSk: '',
 })
+
+if(conifg){
+  try{
+    const val = JSON.parse(decode(conifg as string))
+    Object.assign(state,{...val.private,...val.public})
+  }catch(error){
+    toast.error('读取配置异常')
+  }
+}
 
 const emailSending = ref(false)
 
@@ -86,7 +99,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     public: { siteUrl, enableComment, enableShowComment, commentMaxLength, memoMaxLine, googleRecaptchaSiteKey, pageSize, dateTimeFormat },
     private: { ...rest }
   }
-
   // 创建一个临时的textarea元素
   var textarea = document.createElement("textarea");
   // 设置textarea的内容为指定的文本
@@ -115,7 +127,7 @@ const orderByOptions = [
 ]
 const dateFormatOptions = [
   { value: 'AGO', label: '1天前' },
-  { value: 'asc', label: '2024-05-08 21:02:54' },
+  { value: 'DATE', label: '2024-05-08 21:02:54' },
 ]
 
 async function testSendEmail() {
@@ -139,11 +151,22 @@ async function testSendEmail() {
     } else {
       toast.error('发送邮件失败了,' + messageId)
     }
-    emailSending.value=false
+    emailSending.value = false
   } else {
     toast.error('请先填写完整的邮件服务器信息!')
   }
 }
+
+useHead({
+  title: 'Moments配置管理器',
+  link: [
+    {
+      rel: 'shortcut icon',
+      type: 'image/png',
+      href: 'https://m.mblog.club/favicon.png',
+    },
+  ],
+})
 
 
 </script>
@@ -173,10 +196,10 @@ async function testSendEmail() {
             <UToggle v-model="state.enableShowComment" />
           </UFormGroup>
           <UFormGroup label="评论最大字数" name="enableShowComment">
-            <UInput v-model="state.commentMaxLength" autocomplete="off" />
+            <UInput v-model.number="state.commentMaxLength" autocomplete="off" />
           </UFormGroup>
           <UFormGroup label="发言最大行数" name="memoMaxLine" hint="超过了则显示'全文'按钮,最大10行">
-            <UInput v-model="state.memoMaxLine" autocomplete="off" />
+            <UInput v-model.number="state.memoMaxLine" autocomplete="off" />
           </UFormGroup>
           <UFormGroup label="排序方式" name="commentOrderBy">
             <USelectMenu v-model="state.commentOrderBy" :options="orderByOptions" value-attribute="value"
@@ -192,7 +215,7 @@ async function testSendEmail() {
             <UToggle v-model="state.enableVideo" />
           </UFormGroup>
           <UFormGroup label="分页大小" name="pageSize">
-            <UInput v-model="state.pageSize" />
+            <UInput v-model.number="state.pageSize" />
           </UFormGroup>
           <UFormGroup label="日期格式" name="dateTimeFormat">
             <USelectMenu v-model="state.dateTimeFormat" :options="dateFormatOptions" value-attribute="value"
@@ -221,7 +244,7 @@ async function testSendEmail() {
             <UInput v-model="state.emailHost" autocomplete="off" />
           </UFormGroup>
           <UFormGroup label="邮箱服务器端口" name="emailPort" hint="465端口是加密的,587端口是不加密的">
-            <UInput v-model="state.emailPort" autocomplete="off" />
+            <UInput v-model.number="state.emailPort" autocomplete="off" />
           </UFormGroup>
           <UFormGroup label="是否是安全加密连接" name="emailSecure">
             <UToggle v-model="state.emailSecure" autocomplete="off" />
