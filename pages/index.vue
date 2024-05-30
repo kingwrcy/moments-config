@@ -96,9 +96,9 @@ if (conifg) {
 const emailSending = ref(false)
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-  const { siteUrl, enableComment, enableShowComment, commentMaxLength, memoMaxLine, googleRecaptchaSiteKey, pageSize, dateTimeFormat, ...rest } = event.data
+  const { tencentMapKey,siteUrl, enableComment, enableShowComment, commentMaxLength, memoMaxLine, googleRecaptchaSiteKey, pageSize, dateTimeFormat, ...rest } = event.data
   const config = {
-    public: { siteUrl, enableComment, enableShowComment, commentMaxLength, memoMaxLine, googleRecaptchaSiteKey, pageSize, dateTimeFormat },
+    public: {tencentMapKey, siteUrl, enableComment, enableShowComment, commentMaxLength, memoMaxLine, googleRecaptchaSiteKey, pageSize, dateTimeFormat },
     private: { ...rest }
   }
   // 创建一个临时的textarea元素
