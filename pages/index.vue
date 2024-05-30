@@ -3,15 +3,16 @@ import { z } from 'zod'
 import type { FormErrorEvent, FormSubmitEvent } from '#ui/types'
 import { toast } from 'vue-sonner'
 
-import {  decode } from 'js-base64';
+import { decode } from 'js-base64';
 const route = useRoute()
-const conifg=(route.query.config||'') as string
+const conifg = (route.query.config || '') as string
 
 const emailParser = z.string().email()
 const schema = z.object({
   siteUrl: z.string().refine((val) => val === '' || val.startsWith('http'), {
     message: '要么不填,要么必须以http开头',
   }),
+  tencentMapKey:z.string().default(''),
   enableComment: z.boolean().default(true),
   enableShowComment: z.boolean().default(true),
   commentMaxLength: z.coerce.number().default(120),
@@ -55,6 +56,7 @@ type Schema = z.output<typeof schema>
 
 const state = reactive<Schema>({
   siteUrl: '',
+  tencentMapKey:'',
   enableComment: true,
   enableShowComment: true,
   commentMaxLength: 120,
@@ -82,11 +84,11 @@ const state = reactive<Schema>({
   aliyunSk: '',
 })
 
-if(conifg){
-  try{
+if (conifg) {
+  try {
     const val = JSON.parse(decode(conifg as string))
-    Object.assign(state,{...val.private,...val.public})
-  }catch(error){
+    Object.assign(state, { ...val.private, ...val.public })
+  } catch (error) {
     toast.error('读取配置异常')
   }
 }
@@ -220,6 +222,12 @@ useHead({
           <UFormGroup label="日期格式" name="dateTimeFormat">
             <USelectMenu v-model="state.dateTimeFormat" :options="dateFormatOptions" value-attribute="value"
               option-attribute="label" />
+          </UFormGroup>
+          <UFormGroup label="腾讯地图密钥(自动定位使用)" name="tencentMapKey" >
+            <template #hint>
+              <a class="text-blue-500" target="_blank" href="https://discussion.mblog.club/post/pdovzu5thXE6T1CphSLV2Cu">获取密钥教程</a>
+            </template>
+            <UInput v-model.number="state.tencentMapKey" />
           </UFormGroup>
         </div>
 
