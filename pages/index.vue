@@ -50,6 +50,7 @@ const schema = z.object({
   enableAliyunJudge: z.boolean().default(false),
   aliyunAk: z.string(),
   aliyunSk: z.string(),
+  autoLoadMore: z.boolean().default(false),
 })
 
 type Schema = z.output<typeof schema>
@@ -82,6 +83,7 @@ const state = reactive<Schema>({
   enableAliyunJudge: false,
   aliyunAk: '',
   aliyunSk: '',
+  autoLoadMore: false,
 })
 
 if (conifg) {
@@ -96,9 +98,9 @@ if (conifg) {
 const emailSending = ref(false)
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-  const { tencentMapKey,siteUrl, enableComment, enableShowComment, commentMaxLength, memoMaxLine, googleRecaptchaSiteKey, pageSize, dateTimeFormat, ...rest } = event.data
+  const { autoLoadMore,tencentMapKey,siteUrl, enableComment, enableShowComment, commentMaxLength, memoMaxLine, googleRecaptchaSiteKey, pageSize, dateTimeFormat, ...rest } = event.data
   const config = {
-    public: {tencentMapKey, siteUrl, enableComment, enableShowComment, commentMaxLength, memoMaxLine, googleRecaptchaSiteKey, pageSize, dateTimeFormat },
+    public: {autoLoadMore,tencentMapKey, siteUrl, enableComment, enableShowComment, commentMaxLength, memoMaxLine, googleRecaptchaSiteKey, pageSize, dateTimeFormat },
     private: { ...rest }
   }
   // 创建一个临时的textarea元素
@@ -196,6 +198,9 @@ useHead({
           </UFormGroup>
           <UFormGroup label="是否显示评论" name="enableShowComment">
             <UToggle v-model="state.enableShowComment" />
+          </UFormGroup>
+          <UFormGroup label="是否启用自动加载更多" name="autoLoadMore">
+            <UToggle v-model="state.autoLoadMore" />
           </UFormGroup>
           <UFormGroup label="评论最大字数" name="enableShowComment">
             <UInput v-model.number="state.commentMaxLength" autocomplete="off" />
